@@ -18,6 +18,7 @@ import {
   useCreateLocation,
   useBuildingId,
   useLocations,
+  useUpdateCategory,
 } from "../../../hooks/useCategoryandBuildings";
 import type { ItemObject } from "../../../hooks/useCategoryandBuildings";
 import { FileOutlined } from "@ant-design/icons";
@@ -34,25 +35,42 @@ export default function AddUpdateItemModal({
   initialData,
 }: Props) {
   const [form] = Form.useForm();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<number | null>(null);
-  const [selectedBuildingId, setSelectedBuildingId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<
+    number | null
+  >(null);
+  const [selectedBuildingId, setSelectedBuildingId] = useState<number | null>(
+    null
+  );
+  console.log("data sub", selectedSubcategoryId);
 
   // --- API HOOKLAR ---
   const { mutate: createItem, isPending: isCreating } = useCreateItemObject();
   const { mutate: updateItem, isPending: isUpdating } = useUpdateItemObject();
   const { mutate: createLocation } = useCreateLocation();
+  const { mutate: updateCategory } = useUpdateCategory();
   const { data: locations = [] } = useLocations(); // Barcha locationlarni olib, existingni tekshirish uchun
 
-  const { data: asosiyCategories = [], isLoading: isLoadingAsosiy } = useCategoriesAsosiy();
+  const { data: asosiyCategories = [], isLoading: isLoadingAsosiy } =
+    useCategoriesAsosiy();
   const { data: subCategories = [], isLoading: isLoadingSub } = useCategories();
   console.log(subCategories);
 
-  const { data: buildings = [], isLoading: isLoadingBuildings } = useBuildings();
-  const { data: selectedBuilding, isLoading: isLoadingBuilding } = useBuildingId(selectedBuildingId);
+  const { data: buildings = [], isLoading: isLoadingBuildings } =
+    useBuildings();
+  const { data: selectedBuilding, isLoading: isLoadingBuilding } =
+    useBuildingId(selectedBuildingId);
 
   const isEditing = !!initialData?.id;
-  const isLoading = isCreating || isUpdating || isLoadingAsosiy || isLoadingSub || isLoadingBuildings || isLoadingBuilding;
+  const isLoading =
+    isCreating ||
+    isUpdating ||
+    isLoadingAsosiy ||
+    isLoadingSub ||
+    isLoadingBuildings ||
+    isLoadingBuilding;
 
   // --- SELECT OPTIONS ---
   const categoryOptions = asosiyCategories.map((cat) => ({
@@ -60,44 +78,52 @@ export default function AddUpdateItemModal({
     label: `${cat.categoryNumber} - ${cat.name}`,
   }));
 
-
   const subcategoryOptions = subCategories
-  .filter(sub => sub.category_id === selectedCategoryId)
-  .flatMap(sub =>
-    sub.status.map(status => ({
-      value: status.key,
-      label: status.key,
-      subId: sub.id   // 👈 ID sub dan olinadi
-    }))
-  );
-
-    console.log("subcategoryOptions", subcategoryOptions);
-
+    .filter((sub) => sub.category_id === selectedCategoryId)
+    .flatMap((sub) =>
+      sub.status.map((status) => ({
+        value: status.key,
+        label: status.key,
+        subId: sub.id, // 👈 ID sub dan olinadi
+      }))
+    );
 
   const buildingOptions = buildings.map((b) => ({
     value: b.id,
     label: b.name,
   }));
 
-  const floorOptions = Array.from({ length: selectedBuilding?.floors || 20 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const floorOptions = Array.from(
+    { length: selectedBuilding?.floors || 20 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const roomOptions = Array.from({ length: selectedBuilding?.rooms || 15 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const roomOptions = Array.from(
+    { length: selectedBuilding?.rooms || 15 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const showcaseOptions = Array.from({ length: selectedBuilding?.showcase || 20 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const showcaseOptions = Array.from(
+    { length: selectedBuilding?.showcase || 20 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const polkaOptions = Array.from({ length: selectedBuilding?.polkas || 15 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const polkaOptions = Array.from(
+    { length: selectedBuilding?.polkas || 15 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
   const statusOptions = [
     { value: "Qoniqarli", label: "Qoniqarli" },
@@ -116,11 +142,27 @@ export default function AddUpdateItemModal({
 
     if (initialData) {
       setSelectedCategoryId(initialData.category_id);
+
+      // Find the subcategory key based on the sub_category_id
+      let subCategoryKey = null;
+      if (initialData.sub_category_id) {
+        const subCategory = subCategories.find(
+          (sub) => sub.id === initialData.sub_category_id
+        );
+        if (subCategory) {
+          // For editing, we need to find the key that corresponds to this subcategory
+          // Since we don't have the original key, we'll just set it to null for now
+          // The user will need to reselect the subcategory
+          subCategoryKey = null;
+        }
+      }
+
       form.setFieldsValue({
         name: initialData.name,
         material: initialData.material,
         category_id: initialData.category_id,
-        sub_category_id: initialData.sub_category_id, // Assume from backend
+        sub_category_id: subCategoryKey, // Clear the display value when editing
+        subId: initialData.sub_category_id, // Set the hidden field for actual subcategory ID
         period: initialData.period,
         price: initialData.price,
         status: initialData.status,
@@ -132,20 +174,20 @@ export default function AddUpdateItemModal({
       setSelectedCategoryId(null);
       setSelectedBuildingId(null);
     }
-  }, [initialData, visible, form]);
+  }, [initialData, visible, form, subCategories]);
 
-  // Category change
   const handleCategoryChange = (value: number) => {
     setSelectedCategoryId(value);
     form.setFieldValue("subcategory_id", undefined);
     console.log(value);
-
   };
-  const handleSubCategory = (value: number) => {
+  const handleSubCategoryChange = (value: any, option: any) => {
     setSelectedSubcategoryId(value);
-    form.setFieldValue("subCategory", undefined);
-
-  }
+    // Set the subId in the form when a subcategory is selected
+    if (option && option.subId) {
+      form.setFieldsValue({ subId: option.subId });
+    }
+  };
 
   // Building change (only for create)
   const handleBuildingChange = (value: number) => {
@@ -159,8 +201,8 @@ export default function AddUpdateItemModal({
 
     const itemPayload: Partial<ItemObject> = {
       category_id: values.category_id,
-      sub_category_id: Number(values.subId),
-      subCategory: values.category_id,
+      sub_category_id: values.subId ? Number(values.subId) : undefined,
+      subCategory: String(selectedSubcategoryId) || "",
       name: values.name,
       material: values.material,
       period: Number(values.period),
@@ -169,17 +211,38 @@ export default function AddUpdateItemModal({
       fondType: values.fondType,
       description: values.description,
     };
-
     if (isEditing && initialData?.id) {
       updateItem(
         { id: initialData.id, payload: itemPayload },
         {
           onSuccess: () => {
+            // Update category description if provided and it's different
+            if (values.description && initialData.category_id) {
+              updateCategory(
+                {
+                  id: initialData.category_id,
+                  payload: { description: values.description },
+                },
+                {
+                  onSuccess: () => {
+                    console.log("Category description updated successfully");
+                  },
+                  onError: (error: any) => {
+                    console.error(
+                      "Failed to update category description:",
+                      error
+                    );
+                  },
+                }
+              );
+            }
             message.success("Eksponat yangilandi!");
             onClose();
           },
           onError: (error: any) => {
-            message.error(error.response?.data?.message || "Eksponat yangilashda xatolik");
+            message.error(
+              error.response?.data?.message || "Eksponat yangilashda xatolik"
+            );
           },
         }
       );
@@ -188,9 +251,13 @@ export default function AddUpdateItemModal({
       createItem(itemPayload as Omit<ItemObject, "id">, {
         onSuccess: (newItem) => {
           // Check if location already exists for this category
-          const existingLocation = locations.find((loc) => loc.category_id === newItem.category_id);
+          const existingLocation = locations.find(
+            (loc) => loc.category_id === newItem.category_id
+          );
           if (existingLocation) {
-            message.info("Kategoriya uchun joylashuv allaqachon mavjud. Yangi yaratilmadi.");
+            message.info(
+              "Kategoriya uchun joylashuv allaqachon mavjud. Yangi yaratilmadi."
+            );
             onClose();
             return;
           }
@@ -208,15 +275,42 @@ export default function AddUpdateItemModal({
             onSuccess: () => {
               message.success("Joylashuv saqlandi!");
               onClose();
+              console.log("data loc:", locationPayload);
             },
             onError: (error: any) => {
-              message.error(error.response?.data?.message || "Joylashuv qo'shishda xatolik");
+              message.error(
+                error.response?.data?.message || "Joylashuv qo'shishda xatolik"
+              );
             },
           });
+
+          // Update category description if provided
+          if (values.description) {
+            updateCategory(
+              {
+                id: newItem.category_id,
+                payload: { description: values.description },
+              },
+              {
+                onSuccess: () => {
+                  console.log("Category description updated successfully");
+                },
+                onError: (error: any) => {
+                  console.error(
+                    "Failed to update category description:",
+                    error
+                  );
+                },
+              }
+            );
+          }
+
           message.success("Eksponat qo‘shildi!");
         },
         onError: (error: any) => {
-          message.error(error.response?.data?.message || "Eksponat qo'shishda xatolik");
+          message.error(
+            error.response?.data?.message || "Eksponat qo'shishda xatolik"
+          );
         },
       });
     }
@@ -236,7 +330,11 @@ export default function AddUpdateItemModal({
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Row gutter={32}>
               <Col span={12}>
-                <Form.Item label="Nomi" name="name" rules={[{ required: true, message: "Nomini kiriting" }]}>
+                <Form.Item
+                  label="Nomi"
+                  name="name"
+                  rules={[{ required: true, message: "Nomini kiriting" }]}
+                >
                   <Input placeholder="Masalan: Buxoro dinari" />
                 </Form.Item>
               </Col>
@@ -269,15 +367,26 @@ export default function AddUpdateItemModal({
 
               <Col span={12}>
                 <Form.Item label="Qism kategoriya" name="subcategory_id">
-                  <Select placeholder="Tanlang" options={subcategoryOptions} onChange={handleSubCategory}/>
-
+                  <Select
+                    placeholder="Tanlang"
+                    options={subcategoryOptions}
+                    onChange={handleSubCategoryChange}
+                  />
+                </Form.Item>
+                {/* Hidden field to store the actual subcategory ID */}
+                <Form.Item name="subId" noStyle>
+                  <input type="hidden" />
                 </Form.Item>
               </Col>
             </Row>
 
             <Row gutter={32}>
               <Col span={12}>
-                <Form.Item label="Davr / Sana" name="period" rules={[{ required: true, message: "Davrni kiriting" }]}>
+                <Form.Item
+                  label="Davr / Sana"
+                  name="period"
+                  rules={[{ required: true, message: "Davrni kiriting" }]}
+                >
                   <Input placeholder="Masalan: XIX asr" />
                 </Form.Item>
               </Col>
@@ -320,8 +429,15 @@ export default function AddUpdateItemModal({
                 <h4 className="font-bold mb-3">Joylashuv ma’lumotlari</h4>
 
                 <div className="grid grid-cols-5 gap-2">
-                  <Form.Item label="Bino" name="bino" rules={[{ required: true, message: "Binoni tanlang" }]}>
-                    <Select options={buildingOptions} onChange={handleBuildingChange} />
+                  <Form.Item
+                    label="Bino"
+                    name="bino"
+                    rules={[{ required: true, message: "Binoni tanlang" }]}
+                  >
+                    <Select
+                      options={buildingOptions}
+                      onChange={handleBuildingChange}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -332,7 +448,11 @@ export default function AddUpdateItemModal({
                     <Select options={floorOptions} />
                   </Form.Item>
 
-                  <Form.Item label="Xona" name="xona" rules={[{ required: true, message: "Xonani tanlang" }]}>
+                  <Form.Item
+                    label="Xona"
+                    name="xona"
+                    rules={[{ required: true, message: "Xonani tanlang" }]}
+                  >
                     <Select options={roomOptions} />
                   </Form.Item>
 

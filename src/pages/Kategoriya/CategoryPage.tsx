@@ -20,7 +20,7 @@ const CategoryPage = () => {
         infoName: "",
         authorName: "",
         moved: 0,
-        status: "Yangi",
+        status: "Yangi", // Set initial status to "Yangi"
       },
       {
         onSuccess: () => {
@@ -38,22 +38,36 @@ const CategoryPage = () => {
     <section>
       <div className="w-full border rounded-xl bg-white dark:bg-gray-dark dark:border-gray-700 shadow-sm">
         <div className="w-full p-4">
-          <Form form={form} className="grid grid-cols-3 gap-3 items-center" onFinish={handleSubmit}>
-            <Form.Item className="flex w-full h-full flex-col justify-center" style={{ marginBottom: 0 }}  name="categoryNumber" rules={[{ required: true, message: "Rimni kiriting" }]}>
+          <Form
+            form={form}
+            className="grid grid-cols-3 gap-3 items-center"
+            onFinish={handleSubmit}
+          >
+            <Form.Item
+              className="flex w-full h-full flex-col justify-center"
+              style={{ marginBottom: 0 }}
+              name="categoryNumber"
+              rules={[{ required: true, message: "Rimni kiriting" }]}
+            >
               <Input
                 type="text"
                 placeholder="Rim (I, II...)"
                 className="w-full min-h-full"
               />
             </Form.Item>
-            <Form.Item className="flex w-full h-full flex-col justify-center" style={{ marginBottom: 0 }}  name="categoryName" rules={[{ required: true, message: "Nomini kiriting" }]}>
+            <Form.Item
+              className="flex w-full h-full flex-col justify-center"
+              style={{ marginBottom: 0 }}
+              name="categoryName"
+              rules={[{ required: true, message: "Nomini kiriting" }]}
+            >
               <Input
                 type="text"
                 placeholder="Kategoriya nomi"
                 className="w-full min-h-full"
               />
             </Form.Item>
-            <Button  className="h-[45px]">
+            <Button className="h-[45px]">
               <PlusIcon />
               Yangi kategoriya qo'shish
             </Button>

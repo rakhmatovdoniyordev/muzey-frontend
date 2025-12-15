@@ -11,7 +11,7 @@ export interface ItemObject {
   status: string;
   fondType: string;
   building_id: number;
-  sub_category_id: number;
+  sub_category_id?: number;
   subCategory: string;
   bino: number;
   qavat: number;
@@ -24,12 +24,11 @@ export interface ItemObject {
   room: number;
   showcase: number;
   category?: {
-    categoryNumber: string
-    description: string
-    name: string
-  }
+    categoryNumber: string;
+    description: string;
+    name: string;
+  };
 }
-
 export interface SubCategory {
   id: number;
   name: string;
@@ -88,7 +87,9 @@ export const useCategories = () => {
   return useQuery({
     queryKey: ["sub-categories"],
     queryFn: async () => {
-      const { data } = await request.get<ApiResponse<SubCategory[]>>("/sub-category");
+      const { data } = await request.get<ApiResponse<SubCategory[]>>(
+        "/sub-category"
+      );
       return data.data;
     },
   });
@@ -99,7 +100,9 @@ export const useItemObjects = () => {
   return useQuery({
     queryKey: ["item-objects"],
     queryFn: async () => {
-      const { data } = await request.get<ApiResponse<ItemObject[]>>("/item-objects");
+      const { data } = await request.get<ApiResponse<ItemObject[]>>(
+        "/item-objects"
+      );
       return data.data || [];
     },
   });
@@ -125,7 +128,9 @@ export const useBuildingId = (id: number | null) => {
     queryKey: ["building", id],
     queryFn: async () => {
       if (!id) throw new Error("Invalid building ID");
-      const { data } = await request.get<ApiResponse<Building>>(`/building/${id}`);
+      const { data } = await request.get<ApiResponse<Building>>(
+        `/building/${id}`
+      );
       return data.data;
     },
     enabled: !!id && id > 0,
@@ -137,7 +142,10 @@ export const useCreateItemObject = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: Omit<ItemObject, "id">) => {
-      const { data } = await request.post<ApiResponse<ItemObject>>("/item-objects", payload);
+      const { data } = await request.post<ApiResponse<ItemObject>>(
+        "/item-objects",
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -151,8 +159,17 @@ export const useCreateItemObject = () => {
 export const useUpdateItemObject = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: Partial<ItemObject> }) => {
-      const { data } = await request.patch<ApiResponse<ItemObject>>(`/item-objects/${id}`, payload);
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<ItemObject>;
+    }) => {
+      const { data } = await request.patch<ApiResponse<ItemObject>>(
+        `/item-objects/${id}`,
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -181,7 +198,10 @@ export const useCreateBuilding = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: Omit<Building, "id">) => {
-      const { data } = await request.post<ApiResponse<Building>>("/building", payload);
+      const { data } = await request.post<ApiResponse<Building>>(
+        "/building",
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -194,8 +214,17 @@ export const useCreateBuilding = () => {
 export const useUpdateBuilding = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: Partial<Building> }) => {
-      const { data } = await request.patch<ApiResponse<Building>>(`/building/${id}`, payload);
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<Building>;
+    }) => {
+      const { data } = await request.patch<ApiResponse<Building>>(
+        `/building/${id}`,
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -209,8 +238,17 @@ export const useUpdateBuilding = () => {
 export const useUpdateCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: Partial<Category> }) => {
-      const { data } = await request.patch<ApiResponse<Category>>(`/category/${id}`, payload);
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<Category>;
+    }) => {
+      const { data } = await request.patch<ApiResponse<Category>>(
+        `/category/${id}`,
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -224,8 +262,16 @@ export const useUpdateCategory = () => {
 export const useCreateCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: Omit<Category, "id" | "objs" | "bulds" | "subcategories" | "createdAt" | "updatedAt">) => {
-      const { data } = await request.post<ApiResponse<Category>>("/category", payload);
+    mutationFn: async (
+      payload: Omit<
+        Category,
+        "id" | "objs" | "bulds" | "subcategories" | "createdAt" | "updatedAt"
+      >
+    ) => {
+      const { data } = await request.post<ApiResponse<Category>>(
+        "/category",
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -253,8 +299,14 @@ export const useDeleteCategory = () => {
 export const useCreateSubCategory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: { category_id: number; status: { key: string }[] }) => {
-      const { data } = await request.post<ApiResponse<SubCategory>>("/sub-category", payload);
+    mutationFn: async (payload: {
+      category_id: number;
+      status: { key: string }[];
+    }) => {
+      const { data } = await request.post<ApiResponse<SubCategory>>(
+        "/sub-category",
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -276,7 +328,6 @@ export const useDeleteSubCategory = () => {
     },
   });
 };
-
 
 export interface Location {
   id: number;
@@ -307,7 +358,8 @@ export const useLocationByCategory = (categoryId: number | null) => {
   const { data: locations = [] } = useLocations();
   return useQuery({
     queryKey: ["location-by-category", categoryId],
-    queryFn: () => locations.find((loc) => loc.category_id === categoryId) || null,
+    queryFn: () =>
+      locations.find((loc) => loc.category_id === categoryId) || null,
     enabled: !!categoryId && !!locations.length,
   });
 };
@@ -317,7 +369,10 @@ export const useCreateLocation = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: Omit<Location, "id">) => {
-      const { data } = await request.post<ApiResponse<Location>>("/location", payload);
+      const { data } = await request.post<ApiResponse<Location>>(
+        "/location",
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {
@@ -330,8 +385,17 @@ export const useCreateLocation = () => {
 export const useUpdateLocation = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, payload }: { id: number; payload: Partial<Location> }) => {
-      const { data } = await request.patch<ApiResponse<Location>>(`/location/${id}`, payload);
+    mutationFn: async ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: Partial<Location>;
+    }) => {
+      const { data } = await request.patch<ApiResponse<Location>>(
+        `/location/${id}`,
+        payload
+      );
       return data.data;
     },
     onSuccess: () => {

@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router";
 import UserProfiles from "./pages/UserProfiles";
 import Calendar from "./pages/Calendar";
 import FormElements from "./pages/Forms/FormElements";
-import Blank from "./pages/Blank";
+import Kuchirishlar from "./pages/Kuchirishlar";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
@@ -22,7 +22,7 @@ export default function App() {
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
-            <Route path="/kochirishlar" element={<Blank />} />
+            <Route path="/kochirishlar" element={<Kuchirishlar />} />
 
             {/* Forms */}
             <Route path="/eksponatlar" element={<FormElements />} />

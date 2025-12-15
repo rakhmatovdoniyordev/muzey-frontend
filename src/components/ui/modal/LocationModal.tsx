@@ -11,7 +11,14 @@ import { useEffect, useState } from "react";
 import { Form, Select, Button, message } from "antd";
 import { Modal } from "../../ui/modal/index";
 import { EnvironmentOutlined, FileOutlined } from "@ant-design/icons";
-import { useUpdateLocation, useLocations, ItemObject, useAllBuildings, useBuildingId } from "../../../hooks/useCategoryandBuildings";
+import {
+  useUpdateLocation,
+  useLocations,
+  ItemObject,
+  useAllBuildings,
+  useBuildingId,
+  useUpdateCategory,
+} from "../../../hooks/useCategoryandBuildings";
 
 interface Props {
   visible: boolean;
@@ -22,60 +29,91 @@ interface Props {
 export default function LocationModal({ visible, onClose, itemData }: Props) {
   const [form] = Form.useForm();
   const { mutate: updateLocation, isPending } = useUpdateLocation();
+  const { mutate: updateCategory } = useUpdateCategory(); // Add category update hook
   const { data: allBuildings = [] } = useAllBuildings();
   const { data: locations = [] } = useLocations(); // Fetch all locations
-  const [selectedToBuildingId, setSelectedToBuildingId] = useState<number | null>(null);
-  const [selectedFromBuildingId, setSelectedFromBuildingId] = useState<number | null>(null);
+  const [selectedToBuildingId, setSelectedToBuildingId] = useState<
+    number | null
+  >(null);
+  const [selectedFromBuildingId, setSelectedFromBuildingId] = useState<
+    number | null
+  >(null);
   const { data: selectedToBuilding } = useBuildingId(selectedToBuildingId);
   const { data: selectedFromBuilding } = useBuildingId(selectedFromBuildingId);
 
   // Find current location for the item's category
-  const currentLocation = locations.find((loc) => loc.category_id === itemData?.category_id);
+  const currentLocation = locations.find(
+    (loc) => loc.category_id === itemData?.category_id
+  );
 
   const buildingOptions = allBuildings.map((b: any) => ({
     value: b.id,
     label: b.name,
   }));
 
-  const fromFloorOptions = Array.from({ length: selectedFromBuilding?.floors || 5 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const fromFloorOptions = Array.from(
+    { length: selectedFromBuilding?.floors || 5 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const fromRoomOptions = Array.from({ length: selectedFromBuilding?.rooms || 20 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const fromRoomOptions = Array.from(
+    { length: selectedFromBuilding?.rooms || 20 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const fromShowcaseOptions = Array.from({ length: selectedFromBuilding?.showcase || 10 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const fromShowcaseOptions = Array.from(
+    { length: selectedFromBuilding?.showcase || 10 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const fromPolkaOptions = Array.from({ length: selectedFromBuilding?.polkas || 10 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const fromPolkaOptions = Array.from(
+    { length: selectedFromBuilding?.polkas || 10 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const toFloorOptions = Array.from({ length: selectedToBuilding?.floors || 5 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const toFloorOptions = Array.from(
+    { length: selectedToBuilding?.floors || 5 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const toRoomOptions = Array.from({ length: selectedToBuilding?.rooms || 20 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const toRoomOptions = Array.from(
+    { length: selectedToBuilding?.rooms || 20 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const toShowcaseOptions = Array.from({ length: selectedToBuilding?.showcase || 10 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const toShowcaseOptions = Array.from(
+    { length: selectedToBuilding?.showcase || 10 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
-  const toPolkaOptions = Array.from({ length: selectedToBuilding?.polkas || 10 }, (_, i) => ({
-    value: i + 1,
-    label: i + 1,
-  }));
+  const toPolkaOptions = Array.from(
+    { length: selectedToBuilding?.polkas || 10 },
+    (_, i) => ({
+      value: i + 1,
+      label: i + 1,
+    })
+  );
 
   const reasonOptions = [
     { value: "Ekspozitsiya o'zgarishi", label: "Ekspozitsiya o'zgarishi" },
@@ -133,9 +171,28 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
       { id: currentLocation.id, payload },
       {
         onSuccess: () => {
-          message.success("Eksponat muvaffaqiyatli ko'chirildi!");
-          form.resetFields();
-          onClose();
+          // Update category status to "Kuchirildi" when item is moved
+          updateCategory(
+            { id: itemData.category_id, payload: { status: "Kuchirildi" } },
+            {
+              onSuccess: () => {
+                message.success(
+                  "Eksponat muvaffaqiyatli ko'chirildi va kategoriya holati yangilandi!"
+                );
+                form.resetFields();
+                onClose();
+              },
+              onError: (error: any) => {
+                message.error(
+                  "Kategoriya holatini yangilashda xatolik: " +
+                    (error.response?.data?.message || "Noma'lum xatolik")
+                );
+                // Still close the modal even if category update fails
+                form.resetFields();
+                onClose();
+              },
+            }
+          );
         },
         onError: (error: any) => {
           message.error(error.response?.data?.message || "Xatolik yuz berdi");
@@ -191,29 +248,64 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
             <div className="flex items-center mb-3 text-green-600">
               → QAYERGA (Yangi)
             </div>
-            <Form.Item label="* Bino" name="toBino" rules={[{ required: true, message: "Bino tanlang" }]}>
-              <Select placeholder="Bino tanlang" options={buildingOptions} onChange={handleBuildingChange} />
+            <Form.Item
+              label="* Bino"
+              name="toBino"
+              rules={[{ required: true, message: "Bino tanlang" }]}
+            >
+              <Select
+                placeholder="Bino tanlang"
+                options={buildingOptions}
+                onChange={handleBuildingChange}
+              />
             </Form.Item>
-            <Form.Item label="* Qavat" name="toQavat" rules={[{ required: true, message: "Qavat tanlang" }]}>
+            <Form.Item
+              label="* Qavat"
+              name="toQavat"
+              rules={[{ required: true, message: "Qavat tanlang" }]}
+            >
               <Select placeholder="Qavat tanlang" options={toFloorOptions} />
             </Form.Item>
-            <Form.Item label="* Xona" name="toXona" rules={[{ required: true, message: "Xona tanlang" }]}>
+            <Form.Item
+              label="* Xona"
+              name="toXona"
+              rules={[{ required: true, message: "Xona tanlang" }]}
+            >
               <Select placeholder="Xona tanlang" options={toRoomOptions} />
             </Form.Item>
-            <Form.Item label="* Vitrina" name="toVitrina" rules={[{ required: true, message: "Vitrina tanlang" }]}>
-              <Select placeholder="Vitrina tanlang" options={toShowcaseOptions} />
+            <Form.Item
+              label="* Vitrina"
+              name="toVitrina"
+              rules={[{ required: true, message: "Vitrina tanlang" }]}
+            >
+              <Select
+                placeholder="Vitrina tanlang"
+                options={toShowcaseOptions}
+              />
             </Form.Item>
-            <Form.Item label="* Polka" name="toPolka" rules={[{ required: true, message: "Polka tanlang" }]}>
+            <Form.Item
+              label="* Polka"
+              name="toPolka"
+              rules={[{ required: true, message: "Polka tanlang" }]}
+            >
               <Select placeholder="Polka tanlang" options={toPolkaOptions} />
             </Form.Item>
           </div>
         </div>
 
-        <Form.Item label="Ko'chirish sababi *" name="reason" rules={[{ required: true, message: "Sababni tanlang" }]}>
+        <Form.Item
+          label="Ko'chirish sababi *"
+          name="reason"
+          rules={[{ required: true, message: "Sababni tanlang" }]}
+        >
           <Select placeholder="Tanlang" options={reasonOptions} />
         </Form.Item>
 
-        <Form.Item label="Mas'ul shaxs *" name="responsible" rules={[{ required: true, message: "Mas'ul shaxsni kiriting" }]}>
+        <Form.Item
+          label="Mas'ul shaxs *"
+          name="responsible"
+          rules={[{ required: true, message: "Mas'ul shaxsni kiriting" }]}
+        >
           <Input placeholder="F.I.O va lavozim" />
         </Form.Item>
 
@@ -223,7 +315,12 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
 
         <div className="flex gap-3 mt-4">
           <Button onClick={onClose}>Bekor qilish</Button>
-          <Button type="primary" htmlType="submit" loading={isPending} className="bg-green-600">
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isPending}
+            className="bg-green-600"
+          >
             <FileOutlined /> Ko'chirishni tasdiqlash
           </Button>
         </div>
