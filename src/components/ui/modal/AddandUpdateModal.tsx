@@ -1,12 +1,5 @@
-// AddandUpdateModal.tsx (Takomillashtirilgan va aniq ishlaydigan versiya)
-// Ushbu faylda:
-// - Yangi eksponat qo'shganda, birinchi item create qilinadi, keyin location create qilinadi (agar mavjud bo'lmasa).
-// - Building ID formdan olinadi va locationga building_id sifatida jo'natiladi.
-// - Update holatida faqat item yangilanadi, location emas (chunki location alohida modalda boshqariladi).
-// - Existing locationni tekshirish qo'shildi.
-// - Error handling va loading steytlar yaxshilandi.
-
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
 import { Form, Input, Select, Button, Row, Col, message, Spin } from "antd";
 import { Modal } from "../../ui/modal/index";
 import {
@@ -22,6 +15,23 @@ import {
 } from "../../../hooks/useCategoryandBuildings";
 import type { ItemObject } from "../../../hooks/useCategoryandBuildings";
 import { FileOutlined } from "@ant-design/icons";
+
+interface ItemFormValues {
+  name: string;
+  material: string;
+  category_id: number;
+  subcategory_id?: number;
+  period: string;
+  price: string;
+  status: string;
+  fondType: string;
+  description?: string;
+  bino?: number;
+  qavat?: number;
+  xona?: number;
+  vitrina?: number;
+  polka?: number;
+}
 
 interface Props {
   visible: boolean;
@@ -44,19 +54,16 @@ export default function AddUpdateItemModal({
   const [selectedBuildingId, setSelectedBuildingId] = useState<number | null>(
     null
   );
-  console.log("data sub", selectedSubcategoryId);
 
-  // --- API HOOKLAR ---
   const { mutate: createItem, isPending: isCreating } = useCreateItemObject();
   const { mutate: updateItem, isPending: isUpdating } = useUpdateItemObject();
   const { mutate: createLocation } = useCreateLocation();
   const { mutate: updateCategory } = useUpdateCategory();
-  const { data: locations = [] } = useLocations(); // Barcha locationlarni olib, existingni tekshirish uchun
+  const { data: locations = [] } = useLocations();
 
   const { data: asosiyCategories = [], isLoading: isLoadingAsosiy } =
     useCategoriesAsosiy();
   const { data: subCategories = [], isLoading: isLoadingSub } = useCategories();
-  console.log(subCategories);
 
   const { data: buildings = [], isLoading: isLoadingBuildings } =
     useBuildings();
@@ -72,7 +79,6 @@ export default function AddUpdateItemModal({
     isLoadingBuildings ||
     isLoadingBuilding;
 
-  // --- SELECT OPTIONS ---
   const categoryOptions = asosiyCategories.map((cat) => ({
     value: cat.id,
     label: `${cat.categoryNumber} - ${cat.name}`,
@@ -80,13 +86,10 @@ export default function AddUpdateItemModal({
 
   const subcategoryOptions = subCategories
     .filter((sub) => sub.category_id === selectedCategoryId)
-    .flatMap((sub) =>
-      sub.status.map((status) => ({
-        value: status.key,
-        label: status.key,
-        subId: sub.id, // 👈 ID sub dan olinadi
-      }))
-    );
+    .map((sub) => ({
+      value: sub.id,
+      label: `${sub.name} (${sub.status.map((s) => s.key).join(", ")})`,
+    }));
 
   const buildingOptions = buildings.map((b) => ({
     value: b.id,
@@ -136,23 +139,18 @@ export default function AddUpdateItemModal({
     { value: "O'quv", label: "O'quv fond" },
   ];
 
-  // FORM DATA INIT
   useEffect(() => {
     if (!visible) return;
 
     if (initialData) {
       setSelectedCategoryId(initialData.category_id);
 
-      // Find the subcategory key based on the sub_category_id
       let subCategoryKey = null;
       if (initialData.sub_category_id) {
         const subCategory = subCategories.find(
           (sub) => sub.id === initialData.sub_category_id
         );
         if (subCategory) {
-          // For editing, we need to find the key that corresponds to this subcategory
-          // Since we don't have the original key, we'll just set it to null for now
-          // The user will need to reselect the subcategory
           subCategoryKey = null;
         }
       }
@@ -161,8 +159,7 @@ export default function AddUpdateItemModal({
         name: initialData.name,
         material: initialData.material,
         category_id: initialData.category_id,
-        sub_category_id: subCategoryKey, // Clear the display value when editing
-        subId: initialData.sub_category_id, // Set the hidden field for actual subcategory ID
+        subcategory_id: initialData.sub_category_id,
         period: initialData.period,
         price: initialData.price,
         status: initialData.status,
@@ -179,30 +176,23 @@ export default function AddUpdateItemModal({
   const handleCategoryChange = (value: number) => {
     setSelectedCategoryId(value);
     form.setFieldValue("subcategory_id", undefined);
-    console.log(value);
   };
-  const handleSubCategoryChange = (value: any, option: any) => {
+  const handleSubCategoryChange = (value: number) => {
     setSelectedSubcategoryId(value);
-    // Set the subId in the form when a subcategory is selected
-    if (option && option.subId) {
-      form.setFieldsValue({ subId: option.subId });
-    }
   };
 
-  // Building change (only for create)
   const handleBuildingChange = (value: number) => {
     setSelectedBuildingId(value);
     form.setFieldValue("bino", value);
   };
 
-  // SUBMIT FUNCTION
-  const handleSubmit = (values: any) => {
-    console.log("Form values:", values);
-
+  const handleSubmit = (values: ItemFormValues) => {
     const itemPayload: Partial<ItemObject> = {
       category_id: values.category_id,
-      sub_category_id: values.subId ? Number(values.subId) : undefined,
-      subCategory: String(selectedSubcategoryId) || "",
+      subCategory: values.subcategory_id
+        ? subCategories.find((sub) => sub.id === values.subcategory_id)?.name ||
+          "Noma'lum"
+        : "Asosiy",
       name: values.name,
       material: values.material,
       period: Number(values.period),
@@ -211,106 +201,83 @@ export default function AddUpdateItemModal({
       fondType: values.fondType,
       description: values.description,
     };
+
+    if (values.subcategory_id) {
+      itemPayload.sub_category_id = Number(values.subcategory_id);
+    }
     if (isEditing && initialData?.id) {
       updateItem(
         { id: initialData.id, payload: itemPayload },
         {
           onSuccess: () => {
-            // Update category description if provided and it's different
-            if (values.description && initialData.category_id) {
-              updateCategory(
-                {
-                  id: initialData.category_id,
-                  payload: { description: values.description },
-                },
-                {
-                  onSuccess: () => {
-                    console.log("Category description updated successfully");
-                  },
-                  onError: (error: any) => {
-                    console.error(
-                      "Failed to update category description:",
-                      error
-                    );
-                  },
-                }
-              );
-            }
             message.success("Eksponat yangilandi!");
             onClose();
           },
-          onError: (error: any) => {
-            message.error(
-              error.response?.data?.message || "Eksponat yangilashda xatolik"
-            );
+          onError: (error: Error) => {
+            let errorMessage = "Eksponat yangilashda xatolik";
+
+            if (error instanceof AxiosError) {
+              errorMessage =
+                error.response?.data?.message ||
+                error.response?.data?.error ||
+                error.message ||
+                errorMessage;
+            } else {
+              errorMessage = error.message || errorMessage;
+            }
+
+            message.error(errorMessage);
           },
         }
       );
     } else {
-      // Create item
       createItem(itemPayload as Omit<ItemObject, "id">, {
         onSuccess: (newItem) => {
-          // Check if location already exists for this category
-          const existingLocation = locations.find(
-            (loc) => loc.category_id === newItem.category_id
-          );
-          if (existingLocation) {
-            message.info(
-              "Kategoriya uchun joylashuv allaqachon mavjud. Yangi yaratilmadi."
-            );
-            onClose();
-            return;
-          }
-
-          // Create location only if not exists
           const locationPayload = {
-            category_id: newItem.category_id,
-            building_id: values.bino, // Building ID formdan olinadi va jo'natiladi
+            itemObject_id: newItem.id,
+            category_id: values.category_id,
+            building_id: values.bino,
             floor: values.qavat,
             room: values.xona,
             showcase: values.vitrina,
             polka: values.polka,
           };
+
           createLocation(locationPayload, {
             onSuccess: () => {
               message.success("Joylashuv saqlandi!");
+              message.success("Eksponat qo‘shildi!");
               onClose();
-              console.log("data loc:", locationPayload);
             },
-            onError: (error: any) => {
-              message.error(
-                error.response?.data?.message || "Joylashuv qo'shishda xatolik"
-              );
+            onError: (error: Error) => {
+              let errorMessage = "Joylashuv qo'shishda xatolik";
+
+              if (error instanceof AxiosError) {
+                errorMessage = error.response?.data?.message || errorMessage;
+              } else {
+                errorMessage = error.message || errorMessage;
+              }
+
+              message.error(errorMessage);
+              message.success("Eksponat qo‘shildi!");
+              onClose();
             },
           });
+        },
+        onError: (error: Error) => {
+          let errorMessage = "Eksponat qo'shishda xatolik";
 
-          // Update category description if provided
-          if (values.description) {
-            updateCategory(
-              {
-                id: newItem.category_id,
-                payload: { description: values.description },
-              },
-              {
-                onSuccess: () => {
-                  console.log("Category description updated successfully");
-                },
-                onError: (error: any) => {
-                  console.error(
-                    "Failed to update category description:",
-                    error
-                  );
-                },
-              }
-            );
+          if (error instanceof AxiosError) {
+            errorMessage =
+              error.response?.data?.message ||
+              error.response?.data?.error ||
+              error.message ||
+              errorMessage;
+          } else {
+            errorMessage = error.message || errorMessage;
           }
 
-          message.success("Eksponat qo‘shildi!");
-        },
-        onError: (error: any) => {
-          message.error(
-            error.response?.data?.message || "Eksponat qo'shishda xatolik"
-          );
+          message.error(errorMessage);
         },
       });
     }
@@ -373,7 +340,6 @@ export default function AddUpdateItemModal({
                     onChange={handleSubCategoryChange}
                   />
                 </Form.Item>
-                {/* Hidden field to store the actual subcategory ID */}
                 <Form.Item name="subId" noStyle>
                   <input type="hidden" />
                 </Form.Item>

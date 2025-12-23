@@ -746,7 +746,7 @@ span.flatpickr-weekday,
 }
 
 .task {
-  transition: all 0.2s ease; /* Smooth transition for visual effects */
+  transition: all 0.2s ease;
 }
 
 .task {
@@ -754,7 +754,7 @@ span.flatpickr-weekday,
   box-shadow: 0px 1px 3px 0px rgba(16, 24, 40, 0.1),
     0px 1px 2px 0px rgba(16, 24, 40, 0.06);
   opacity: 0.8;
-  cursor: grabbing; /* Changes the cursor to indicate dragging */
+  cursor: grabbing;
 }
 
 .custom-calendar .fc-h-event {
@@ -778,32 +778,30 @@ span.flatpickr-weekday,
   @apply opacity-100;
 }
 
-
 :root .ant-table {
   background-color: #ffffff !important;
-  border-color: #e5e7eb !important; /* border-gray-200 */
+  border-color: #e5e7eb !important;
 }
 
 :root .ant-table-thead > tr > th {
-  background-color: #f9fafb !important; /* gray-50 */
-  color: #374151 !important;            /* text-gray-700 */
+  background-color: #f9fafb !important;
+  color: #374151 !important;
   border-color: #e5e7eb !important;
 }
 
 :root .ant-table-tbody > tr > td {
   background-color: #ffffff !important;
-  color: #1f2937 !important; /* text-gray-800 */
+  color: #1f2937 !important;
   border-color: #e5e7eb !important;
 }
 
 :root .ant-table-tbody > tr:hover > td {
-  background-color: #f3f4f6 !important; /* gray-100 */
+  background-color: #f3f4f6 !important;
 }
 
-/* AntD Table — Row & Cell */
 html.dark .ant-table {
-  background-color: #1f2937 !important; /* bg-gray-800 */
-  border-color: #3a3b3d !important;     /* border-gray-800 */
+  background-color: #1f2937 !important;
+  border-color: #3a3b3d !important;
 }
 
 html.dark .ant-table-container {
@@ -811,35 +809,87 @@ html.dark .ant-table-container {
   border-color: #3a3b3d !important;
 }
 
-/* Thead */
 html.dark .ant-table-thead > tr > th {
   background-color: #1f2937 !important;
-  color: #e5e7eb !important; /* text-gray-200 */
+  color: #e5e7eb !important;
   border-color: #3a3b3d !important;
 }
 
-/* Tbody */
 html.dark .ant-table-tbody > tr > td {
   background-color: #1f2937 !important;
-  color: #d1d5db !important; /* text-gray-300 */
+  color: #d1d5db !important;
   border-color: #3a3b3d !important;
 }
 
-/* Hover effect (slightly lighter) */
 html.dark .ant-table-tbody > tr:hover > td {
-  background-color: #84858612 !important; /* bg-gray-700 */
+  background-color: #84858612 !important;
 }
 
 ::-webkit-scrollbar {
   width: 0;
 }
 
-
 .dark .dark-input {
   background: #1a2231 !important;
   color: #fff !important;
   border-color: #344054 !important;
 }
-.dark .dark-input::placeholder {
-  color: #ffffff82 !important;
+.dark input.ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+
+html.dark .dark-form-item .ant-form-item-control-input-content {
+  background-color: #1a2231 !important;
+}
+
+html.dark .dark-select .ant-select-selector {
+  background-color: #1a2231 !important;
+  border-color: #344054 !important;
+  color: #ffffff !important; 
+}
+
+html.dark .dark-select .ant-select-selection-placeholder {
+  color: rgba(
+    255,
+    255,
+    255,
+    0.5
+  ) !important;
+}
+
+html.dark .dark-select .ant-select-arrow {
+  color: #98a2b3 !important;
+}
+
+html.dark .ant-select-dropdown {
+  background-color: #1a2231 !important;
+  border-color: #344054 !important;
+}
+
+html.dark .ant-select-item-option {
+  background-color: #1a2231 !important;
+  color: #ffffff !important;
+}
+
+html.dark .ant-select-item-option-active:not(.ant-select-item-option-selected) {
+  background-color: #2a3448 !important;
+}
+
+html.dark .ant-select-item-option-selected {
+  background-color: #344054 !important;
+}
+
+.ant-select-arrow,
+.ant-select-arrow > svg,
+.ant-select-arrow > .anticon {
+  color: #6b7280 !important;
+  fill: #6b7280 !important;
+}
+
+html.dark .ant-select-arrow,
+html.dark .ant-select-arrow > svg,
+html.dark .ant-select-arrow > .anticon {
+  color: #ffffff !important;
+  fill: #ffffff !important;
 }

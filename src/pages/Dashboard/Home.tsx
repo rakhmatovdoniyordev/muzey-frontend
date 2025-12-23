@@ -93,7 +93,7 @@ export default function Home() {
               >
                 <div className="flex flex-col justify-between flex-1">
                   <p className="font-medium dark:text-gray-400">{item.name}</p>
-                  <p className="text-gray-600 dark:text-gray-500 text-sm">{`KP-${item.id}`}</p>
+                  <p className="text-gray-600 dark:text-gray-500 text-sm">{`KK-${item.id}`}</p>
                 </div>
                 <div>
                   <button

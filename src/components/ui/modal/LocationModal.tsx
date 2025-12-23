@@ -1,24 +1,38 @@
-// LocationModal.tsx (Takomillashtirilgan versiya)
-// Ushbu faylda:
-// - Update locationda building_id values.toBino dan olinadi va jo'natiladi.
-// - Building nomi emas, ID ishlatiladi (backendga jo'natishda).
-// - From va To bo'limlari uchun alohida selectedBuildingId lar, options dinamik.
-// - Current location category_id bo'yicha topiladi.
-// - Debug log o'chirilgan, faqat zarur console.log qoldirilgan.
-
-import { Input } from "antd";
+import { Input, InputNumber } from "antd";
 import { useEffect, useState } from "react";
 import { Form, Select, Button, message } from "antd";
 import { Modal } from "../../ui/modal/index";
+import { AxiosError } from "axios";
 import { EnvironmentOutlined, FileOutlined } from "@ant-design/icons";
 import {
   useUpdateLocation,
-  useLocations,
+  useCreateLocation,
+  useLocationByItem,
+  useCreateHistory,
+  useUpdateItemObject,
   ItemObject,
+  Building,
   useAllBuildings,
   useBuildingId,
   useUpdateCategory,
+  HistoryRequest,
 } from "../../../hooks/useCategoryandBuildings";
+
+interface LocationFormValues {
+  fromBino?: number;
+  fromQavat?: number;
+  fromXona?: number;
+  fromVitrina?: number;
+  fromPolka?: number;
+  toBino: number;
+  toQavat: number;
+  toXona: number;
+  toVitrina: number;
+  toPolka: number;
+  reason: string;
+  responsible: string;
+  notes?: string;
+}
 
 interface Props {
   visible: boolean;
@@ -28,60 +42,32 @@ interface Props {
 
 export default function LocationModal({ visible, onClose, itemData }: Props) {
   const [form] = Form.useForm();
-  const { mutate: updateLocation, isPending } = useUpdateLocation();
-  const { mutate: updateCategory } = useUpdateCategory(); // Add category update hook
+  const { mutate: updateLocation, isPending: isUpdating } = useUpdateLocation();
+  const { mutate: createLocation, isPending: isCreating } = useCreateLocation();
+  const { mutate: createHistory } = useCreateHistory();
+  const { mutate: updateItemObject } = useUpdateItemObject();
+  const { mutate: updateCategory } = useUpdateCategory();
   const { data: allBuildings = [] } = useAllBuildings();
-  const { data: locations = [] } = useLocations(); // Fetch all locations
+  const { data: currentLocation } = useLocationByItem(itemData?.id);
+
   const [selectedToBuildingId, setSelectedToBuildingId] = useState<
     number | null
   >(null);
-  const [selectedFromBuildingId, setSelectedFromBuildingId] = useState<
-    number | null
-  >(null);
+
   const { data: selectedToBuilding } = useBuildingId(selectedToBuildingId);
-  const { data: selectedFromBuilding } = useBuildingId(selectedFromBuildingId);
 
-  // Find current location for the item's category
-  const currentLocation = locations.find(
-    (loc) => loc.category_id === itemData?.category_id
-  );
-
-  const buildingOptions = allBuildings.map((b: any) => ({
+  const buildingOptions = allBuildings.map((b: Building) => ({
     value: b.id,
     label: b.name,
   }));
 
-  const fromFloorOptions = Array.from(
-    { length: selectedFromBuilding?.floors || 5 },
-    (_, i) => ({
-      value: i + 1,
-      label: i + 1,
-    })
-  );
-
-  const fromRoomOptions = Array.from(
-    { length: selectedFromBuilding?.rooms || 20 },
-    (_, i) => ({
-      value: i + 1,
-      label: i + 1,
-    })
-  );
-
-  const fromShowcaseOptions = Array.from(
-    { length: selectedFromBuilding?.showcase || 10 },
-    (_, i) => ({
-      value: i + 1,
-      label: i + 1,
-    })
-  );
-
-  const fromPolkaOptions = Array.from(
-    { length: selectedFromBuilding?.polkas || 10 },
-    (_, i) => ({
-      value: i + 1,
-      label: i + 1,
-    })
-  );
+  const getBuildingName = (buildingId: number | null | undefined) => {
+    if (!buildingId) {
+      return "Noma'lum bino";
+    }
+    const building = allBuildings.find((b) => b.id === buildingId);
+    return building ? building.name : `Bino ${buildingId}`;
+  };
 
   const toFloorOptions = Array.from(
     { length: selectedToBuilding?.floors || 5 },
@@ -116,6 +102,7 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
   );
 
   const reasonOptions = [
+    { value: "Yangi eksponat qo'shildi", label: "Yangi eksponat qo'shildi" },
     { value: "Ekspozitsiya o'zgarishi", label: "Ekspozitsiya o'zgarishi" },
     { value: "Remont ishlari", label: "Remont ishlari" },
     { value: "Xavfsizlik sababli", label: "Xavfsizlik sababli" },
@@ -126,8 +113,24 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
 
   useEffect(() => {
     if (visible && itemData && currentLocation) {
-      setSelectedFromBuildingId(currentLocation.building_id);
       setSelectedToBuildingId(currentLocation.building_id);
+    } else if (visible && itemData && !currentLocation) {
+      form.setFieldsValue({
+        fromBino: undefined,
+        fromQavat: undefined,
+        fromXona: undefined,
+        fromVitrina: undefined,
+        fromPolka: undefined,
+        reason: undefined,
+        responsible: "",
+        notes: "",
+      });
+      setSelectedToBuildingId(null);
+    }
+  }, [visible, form, itemData, currentLocation]);
+
+  useEffect(() => {
+    if (visible && itemData && currentLocation) {
       form.setFieldsValue({
         fromBino: currentLocation.building_id,
         fromQavat: currentLocation.floor,
@@ -143,14 +146,11 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
         responsible: currentLocation.infoName || "",
         notes: currentLocation.description || "",
       });
-    } else if (visible && itemData && !currentLocation) {
-      message.error("Joylashuv topilmadi!");
-      onClose();
     }
   }, [visible, form, itemData, currentLocation]);
 
-  const handleSubmit = (values: any) => {
-    if (!itemData?.id || !currentLocation?.id) {
+  const handleSubmit = (values: LocationFormValues) => {
+    if (!itemData?.id) {
       message.error("Eksponat tanlanmagan!");
       return;
     }
@@ -163,42 +163,353 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
       room: values.toXona,
       showcase: values.toVitrina,
       polka: values.toPolka,
-      building_id: values.toBino, // Building ID jo'natiladi
+      building_id: values.toBino,
       category_id: itemData.category_id,
+      itemObject_id: itemData.id,
     };
 
-    updateLocation(
-      { id: currentLocation.id, payload },
-      {
-        onSuccess: () => {
-          // Update category status to "Kuchirildi" when item is moved
-          updateCategory(
-            { id: itemData.category_id, payload: { status: "Kuchirildi" } },
-            {
-              onSuccess: () => {
-                message.success(
-                  "Eksponat muvaffaqiyatli ko'chirildi va kategoriya holati yangilandi!"
-                );
-                form.resetFields();
-                onClose();
-              },
-              onError: (error: any) => {
-                message.error(
-                  "Kategoriya holatini yangilashda xatolik: " +
-                    (error.response?.data?.message || "Noma'lum xatolik")
-                );
-                // Still close the modal even if category update fails
-                form.resetFields();
-                onClose();
-              },
+    if (currentLocation?.id) {
+      updateLocation(
+        { id: currentLocation.id, payload },
+        {
+          onSuccess: () => {
+            if (itemData?.id) {
+              updateItemObject(
+                { id: itemData.id, payload: { statusCategory: "Kuchirildi" } },
+                {
+                  onSuccess: () => {
+                    createHistory(
+                      {
+                        name: `Item ${itemData.id} moved`,
+                        data: {
+                          key: itemData.id.toString(),
+                          itemName: itemData.name,
+                          info: {
+                            reason: values.reason,
+                            description: values.notes || "",
+                            date: new Date().toISOString(),
+                            fromLocation: currentLocation
+                              ? {
+                                  buildingId: currentLocation.building_id,
+                                  buildingName: getBuildingName(
+                                    currentLocation.building_id
+                                  ),
+                                  floor: currentLocation.floor,
+                                  room: currentLocation.room,
+                                  showcase: currentLocation.showcase,
+                                  shelf: currentLocation.polka,
+                                }
+                              : null,
+                            toLocation: {
+                              buildingId: values.toBino,
+                              buildingName: getBuildingName(values.toBino),
+                              floor: values.toQavat,
+                              room: values.toXona,
+                              showcase: values.toVitrina,
+                              shelf: values.toPolka,
+                            },
+                            responsiblePerson: values.responsible,
+                          },
+                        },
+                      },
+                      {
+                        onSuccess: () => {
+                          message.success(
+                            "Eksponat muvaffaqiyatli ko'chirildi va tarix yozildi!"
+                          );
+                          form.resetFields();
+                          onClose();
+                        },
+                        onError: (error: unknown) => {
+                          const axiosError = error as AxiosError;
+                          message.error(
+                            "Tarix yozishda xatolik: " +
+                              (axiosError.response?.data?.message ||
+                                "Noma'lum xatolik")
+                          );
+                          form.resetFields();
+                          onClose();
+                        },
+                      }
+                    );
+                  },
+                  onError: (error: unknown) => {
+                    console.error("Error updating item statusCategory:", error);
+                    createHistory(
+                      {
+                        name: `Item ${itemData.id} moved`,
+                        data: {
+                          key: itemData.id.toString(),
+                          itemName: itemData.name,
+                          info: {
+                            reason: values.reason,
+                            description: values.notes || "",
+                            date: new Date().toISOString(),
+                            fromLocation: currentLocation
+                              ? {
+                                  buildingId: currentLocation.building_id,
+                                  buildingName: getBuildingName(
+                                    currentLocation.building_id
+                                  ),
+                                  floor: currentLocation.floor,
+                                  room: currentLocation.room,
+                                  showcase: currentLocation.showcase,
+                                  shelf: currentLocation.polka,
+                                }
+                              : null,
+                            toLocation: {
+                              buildingId: values.toBino,
+                              buildingName: getBuildingName(values.toBino),
+                              floor: values.toQavat,
+                              room: values.toXona,
+                              showcase: values.toVitrina,
+                              shelf: values.toPolka,
+                            },
+                            responsiblePerson: values.responsible,
+                          },
+                        },
+                      },
+                      {
+                        onSuccess: () => {
+                          message.success(
+                            "Eksponat muvaffaqiyatli ko'chirildi va tarix yozildi!"
+                          );
+                          form.resetFields();
+                          onClose();
+                        },
+                        onError: (error: unknown) => {
+                          const axiosError = error as AxiosError;
+                          message.error(
+                            "Tarix yozishda xatolik: " +
+                              (axiosError.response?.data?.message ||
+                                "Noma'lum xatolik")
+                          );
+                          form.resetFields();
+                          onClose();
+                        },
+                      }
+                    );
+                  },
+                }
+              );
+            } else {
+              createHistory(
+                {
+                  name: `Item ${itemData.id} moved`,
+                  data: {
+                    key: itemData.id.toString(),
+                    itemName: itemData.name,
+                    info: {
+                      reason: values.reason,
+                      description: values.notes || "",
+                      date: new Date().toISOString(),
+                      fromLocation: currentLocation
+                        ? {
+                            buildingId: currentLocation.building_id,
+                            buildingName: getBuildingName(
+                              currentLocation.building_id
+                            ),
+                            floor: currentLocation.floor,
+                            room: currentLocation.room,
+                            showcase: currentLocation.showcase,
+                            shelf: currentLocation.polka,
+                          }
+                        : null,
+                      toLocation: {
+                        buildingId: values.toBino,
+                        buildingName: getBuildingName(values.toBino),
+                        floor: values.toQavat,
+                        room: values.toXona,
+                        showcase: values.toVitrina,
+                        shelf: values.toPolka,
+                      },
+                      responsiblePerson: values.responsible,
+                    },
+                  },
+                },
+                {
+                  onSuccess: () => {
+                    message.success(
+                      "Eksponat muvaffaqiyatli ko'chirildi va tarix yozildi!"
+                    );
+                    form.resetFields();
+                    onClose();
+                  },
+                  onError: (error: unknown) => {
+                    const axiosError = error as AxiosError;
+                    message.error(
+                      "Tarix yozishda xatolik: " +
+                        (axiosError.response?.data?.message ||
+                          "Noma'lum xatolik")
+                    );
+                    form.resetFields();
+                    onClose();
+                  },
+                }
+              );
             }
+          },
+          onError: (error: unknown) => {
+            const axiosError = error as AxiosError;
+            message.error(
+              axiosError.response?.data?.message || "Xatolik yuz berdi"
+            );
+          },
+        }
+      );
+    } else {
+      createLocation(payload, {
+        onSuccess: (newLocation) => {
+          if (itemData?.id) {
+            updateItemObject(
+              { id: itemData.id, payload: { statusCategory: "Kuchirildi" } },
+              {
+                onSuccess: () => {
+                  createHistory(
+                    {
+                      name: `Item ${itemData.id} location created`,
+                      data: {
+                        key: itemData.id.toString(),
+                        itemName: itemData.name,
+                        info: {
+                          reason: values.reason || "Yangi joylashuv yaratildi",
+                          description: values.notes || "",
+                          date: new Date().toISOString(),
+                          fromLocation: null,
+                          toLocation: {
+                            buildingId: values.toBino,
+                            buildingName: getBuildingName(values.toBino),
+                            floor: values.toQavat,
+                            room: values.toXona,
+                            showcase: values.toVitrina,
+                            shelf: values.toPolka,
+                          },
+                          responsiblePerson: values.responsible,
+                        },
+                      },
+                    },
+                    {
+                      onSuccess: () => {
+                        message.success(
+                          "Joylashuv muvaffaqiyatli saqlandi va tarix yozildi!"
+                        );
+                        form.resetFields();
+                        onClose();
+                      },
+                      onError: (error: unknown) => {
+                        const axiosError = error as AxiosError;
+                        message.error(
+                          "Tarix yozishda xatolik: " +
+                            (axiosError.response?.data?.message ||
+                              "Noma'lum xatolik")
+                        );
+                        form.resetFields();
+                        onClose();
+                      },
+                    }
+                  );
+                },
+                onError: (error: unknown) => {
+                  console.error("Error updating item statusCategory:", error);
+                  createHistory(
+                    {
+                      name: `Item ${itemData.id} location created`,
+                      data: {
+                        key: itemData.id.toString(),
+                        itemName: itemData.name,
+                        info: {
+                          reason: values.reason || "Yangi joylashuv yaratildi",
+                          description: values.notes || "",
+                          date: new Date().toISOString(),
+                          fromLocation: null,
+                          toLocation: {
+                            buildingId: values.toBino,
+                            buildingName: getBuildingName(values.toBino),
+                            floor: values.toQavat,
+                            room: values.toXona,
+                            showcase: values.toVitrina,
+                            shelf: values.toPolka,
+                          },
+                          responsiblePerson: values.responsible,
+                        },
+                      },
+                    },
+                    {
+                      onSuccess: () => {
+                        message.success(
+                          "Joylashuv muvaffaqiyatli saqlandi va tarix yozildi!"
+                        );
+                        form.resetFields();
+                        onClose();
+                      },
+                      onError: (error: unknown) => {
+                        const axiosError = error as AxiosError;
+                        message.error(
+                          "Tarix yozishda xatolik: " +
+                            (axiosError.response?.data?.message ||
+                              "Noma'lum xatolik")
+                        );
+                        form.resetFields();
+                        onClose();
+                      },
+                    }
+                  );
+                },
+              }
+            );
+          } else {
+            createHistory(
+              {
+                name: `Item ${itemData.id} location created`,
+                data: {
+                  key: itemData.id.toString(),
+                  itemName: itemData.name,
+                  info: {
+                    reason: values.reason || "Yangi joylashuv yaratildi",
+                    description: values.notes || "",
+                    date: new Date().toISOString(),
+                    fromLocation: null,
+                    toLocation: {
+                      buildingId: values.toBino,
+                      buildingName: getBuildingName(values.toBino),
+                      floor: values.toQavat,
+                      room: values.toXona,
+                      showcase: values.toVitrina,
+                      shelf: values.toPolka,
+                    },
+                    responsiblePerson: values.responsible,
+                  },
+                },
+              },
+              {
+                onSuccess: () => {
+                  message.success(
+                    "Joylashuv muvaffaqiyatli saqlandi va tarix yozildi!"
+                  );
+                  form.resetFields();
+                  onClose();
+                },
+                onError: (error: unknown) => {
+                  const axiosError = error as AxiosError;
+                  message.error(
+                    "Tarix yozishda xatolik: " +
+                      (axiosError.response?.data?.message || "Noma'lum xatolik")
+                  );
+                  form.resetFields();
+                  onClose();
+                },
+              }
+            );
+          }
+        },
+        onError: (error: unknown) => {
+          const axiosError = error as AxiosError;
+          message.error(
+            axiosError.response?.data?.message || "Joylashuv yaratishda xatolik"
           );
         },
-        onError: (error: any) => {
-          message.error(error.response?.data?.message || "Xatolik yuz berdi");
-        },
-      }
-    );
+      });
+    }
   };
 
   const handleBuildingChange = (value: number) => {
@@ -208,7 +519,9 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
 
   return (
     <Modal
-      title="Eksponatni ko'chirish"
+      title={
+        currentLocation ? "Eksponatni ko'chirish" : "Joylashuvni belgilash"
+      }
       isOpen={visible}
       onClose={onClose}
       className="max-w-[1000px] max-h-[90vh] p-6 overflow-auto"
@@ -216,40 +529,65 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
       <div className="bg-[#EFF6FF] p-3 mb-4 rounded mt-4">
         <div className="text-[13px] font-bold">{itemData?.name}</div>
         <div className="text-[12px] text-[#9333EA] mt-1">
-          KP-{itemData?.id} / {itemData?.name}
+          KK-{itemData?.id} / {itemData?.name}
         </div>
       </div>
 
       <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-[#fee] p-4 rounded border border-red-200">
-            <div className="flex items-center mb-3 text-red-600">
+          <div className="bg-[#fee] p-4 rounded border border-red-200 dark:border-red-500">
+            <div className="flex items-center mb-3 text-red-600 font-bold">
               <EnvironmentOutlined className="mr-2" />
               QAYERDAN (Hozirgi)
             </div>
-            <Form.Item label="* Bino" name="fromBino">
-              <Select disabled options={buildingOptions} />
-            </Form.Item>
-            <Form.Item label="* Qavat" name="fromQavat">
-              <Select disabled options={fromFloorOptions} />
-            </Form.Item>
-            <Form.Item label="* Xona" name="fromXona">
-              <Select disabled options={fromRoomOptions} />
-            </Form.Item>
-            <Form.Item label="* Vitrina" name="fromVitrina">
-              <Select disabled options={fromShowcaseOptions} />
-            </Form.Item>
-            <Form.Item label="* Polka" name="fromPolka">
-              <Select disabled options={fromPolkaOptions} />
-            </Form.Item>
+            {currentLocation ? (
+              <>
+                <div className="flex flex-col gap-4 text-sm">
+                  <p>
+                    Bino:{" "}
+                    <span className="font-bold">
+                      {currentLocation?.building?.name}
+                    </span>
+                  </p>
+                  <p>
+                    Qavat:{" "}
+                    <span className="font-bold">
+                      {currentLocation?.floor}-qavat
+                    </span>
+                  </p>
+                  <p>
+                    Xona:{" "}
+                    <span className="font-bold">
+                      Xona-{currentLocation?.room}
+                    </span>
+                  </p>
+                  <p>
+                    Vitrina:{" "}
+                    <span className="font-bold">
+                      Vitrina-{currentLocation?.showcase}
+                    </span>
+                  </p>
+                  <p>
+                    Polka:{" "}
+                    <span className="font-bold">
+                      Polka-{currentLocation?.polka}
+                    </span>
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p>Eksponat hali joylashtirilmagan</p>
+              </div>
+            )}
           </div>
 
-          <div className="bg-green-50 p-4 rounded border border-green-200">
-            <div className="flex items-center mb-3 text-green-600">
+          <div className="bg-green-50 p-4 rounded border border-green-200 dark:border-green-500">
+            <div className="flex items-center mb-3 text-green-600 font-bold">
               → QAYERGA (Yangi)
             </div>
             <Form.Item
-              label="* Bino"
+              label="Bino"
               name="toBino"
               rules={[{ required: true, message: "Bino tanlang" }]}
             >
@@ -260,21 +598,21 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
               />
             </Form.Item>
             <Form.Item
-              label="* Qavat"
+              label="Qavat"
               name="toQavat"
               rules={[{ required: true, message: "Qavat tanlang" }]}
             >
               <Select placeholder="Qavat tanlang" options={toFloorOptions} />
             </Form.Item>
             <Form.Item
-              label="* Xona"
+              label="Xona"
               name="toXona"
               rules={[{ required: true, message: "Xona tanlang" }]}
             >
               <Select placeholder="Xona tanlang" options={toRoomOptions} />
             </Form.Item>
             <Form.Item
-              label="* Vitrina"
+              label="Vitrina"
               name="toVitrina"
               rules={[{ required: true, message: "Vitrina tanlang" }]}
             >
@@ -284,7 +622,7 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
               />
             </Form.Item>
             <Form.Item
-              label="* Polka"
+              label="Polka"
               name="toPolka"
               rules={[{ required: true, message: "Polka tanlang" }]}
             >
@@ -292,9 +630,8 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
             </Form.Item>
           </div>
         </div>
-
         <Form.Item
-          label="Ko'chirish sababi *"
+          label={"Ko'chirish sababi *"}
           name="reason"
           rules={[{ required: true, message: "Sababni tanlang" }]}
         >
@@ -318,10 +655,13 @@ export default function LocationModal({ visible, onClose, itemData }: Props) {
           <Button
             type="primary"
             htmlType="submit"
-            loading={isPending}
+            loading={isCreating || isUpdating}
             className="bg-green-600"
           >
-            <FileOutlined /> Ko'chirishni tasdiqlash
+            <FileOutlined />{" "}
+            {currentLocation
+              ? "Ko'chirishni tasdiqlash"
+              : "Joylashuvni saqlash"}
           </Button>
         </div>
       </Form>

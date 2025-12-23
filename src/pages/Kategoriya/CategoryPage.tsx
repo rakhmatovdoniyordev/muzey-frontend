@@ -21,6 +21,7 @@ const CategoryPage = () => {
         authorName: "",
         moved: 0,
         status: "Yangi", // Set initial status to "Yangi"
+        category_id: 0, // Add the missing required field, will be set by backend
       },
       {
         onSuccess: () => {

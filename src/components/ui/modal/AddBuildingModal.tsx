@@ -1,7 +1,19 @@
+import { AxiosError } from "axios";
 import { Form, Input, InputNumber, Button, message } from "antd";
 import { Modal } from "../../ui/modal/index";
-import { useCreateBuilding } from "../../../hooks/useCategoryandBuildings";
-import type { Building } from "../../../hooks/useCategoryandBuildings";
+import {
+  useCreateBuilding,
+  useCategoriesAsosiy,
+} from "../../../hooks/useCategoryandBuildings";
+
+interface BuildingFormValues {
+  name: string;
+  floors: number;
+  rooms: number;
+  showcase: number;
+  polkas: number;
+  category_id: number;
+}
 
 interface Props {
   visible: boolean;
@@ -16,26 +28,36 @@ export default function AddBuildingModal({
 }: Props) {
   const [form] = Form.useForm();
   const { mutate: createBuilding, isPending } = useCreateBuilding();
+  const { data: categories = [] } = useCategoriesAsosiy();
 
-  const handleSubmit = (values: any) => {
-    // Create payload without category_id since it's not needed for building creation
+  const handleSubmit = (values: BuildingFormValues) => {
     const payload = {
       name: values.name,
       floors: values.floors,
       rooms: values.rooms,
       showcase: values.showcase,
       polkas: values.polkas,
-    } as Omit<Building, "id" | "category_id">;
+      category_id: values.category_id,
+    };
 
-    createBuilding(payload as any, {
+    createBuilding(payload, {
       onSuccess: () => {
         message.success("Bino muvaffaqiyatli qo'shildi!");
         form.resetFields();
         onClose();
         onCreated?.();
       },
-      onError: (error: any) => {
-        message.error(error.response?.data?.message || "Xatolik yuz berdi");
+      onError: (error: Error) => {
+        let errorMessage = "Xatolik yuz berdi";
+
+        if (error instanceof AxiosError) {
+          errorMessage =
+            error.response?.data?.message || error.message || errorMessage;
+        } else {
+          errorMessage = error.message || errorMessage;
+        }
+
+        message.error(errorMessage);
       },
     });
   };

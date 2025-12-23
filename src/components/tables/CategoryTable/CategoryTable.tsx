@@ -1,4 +1,3 @@
-// DOCUMENT filename="CategoryTable.tsx"
 import React from 'react';
 import { Table, Button, Popconfirm } from 'antd';
 import type { ColumnsType } from 'antd/es/table';

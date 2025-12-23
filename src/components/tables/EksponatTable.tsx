@@ -25,12 +25,10 @@ import type { ColumnsType } from "antd/es/table";
 export default function EksponatTable() {
   const { data: items = [], isLoading } = useItemObjects();
   const { data: categories = [] } = useCategoriesAsosiy();
-  console.log("Items", items);
-
-  const { mutate: deleteItem } = useDeleteItemObject();
   console.log(items);
 
-  // Filter categories by status - only show "Yangi" or "Kuchirildi"
+  const { mutate: deleteItem } = useDeleteItemObject();
+
   const filteredCategories = useMemo(() => {
     return categories.filter(
       (category) =>
@@ -38,7 +36,6 @@ export default function EksponatTable() {
     );
   }, [categories]);
 
-  // Enhance items with category information
   const itemsWithCategoryInfo = useMemo(() => {
     return items.map((item) => {
       const category = filteredCategories.find(
@@ -46,6 +43,7 @@ export default function EksponatTable() {
       );
       return {
         ...item,
+        statusCategory: item.statusCategory || category?.status,
         category: category || item.category,
       };
     });
@@ -176,13 +174,13 @@ export default function EksponatTable() {
 
   const columns: ColumnsType<ItemObject> = [
     {
-      title: "KP",
+      title: "KK",
       dataIndex: "id",
       key: "id",
       width: 80,
       sorter: (a: ItemObject, b: ItemObject) => a.id - b.id,
       defaultSortOrder: "ascend",
-      render: (id: number) => `KP-${id}`,
+      render: (id: number) => `KK-${id}`,
     },
     {
       title: "INV",
@@ -208,12 +206,12 @@ export default function EksponatTable() {
       title: "Izoh",
       dataIndex: "description",
       key: "description",
-      render: (_: any, record: ItemObject) => {
-        const desc = record.category?.description ?? "...";
-
+      render: (description: string) => {
         return (
-          <Tooltip title={desc} arrow={mergedArrow}>
-            <span className="block max-w-[120px] truncate">{desc}</span>
+          <Tooltip title={description} arrow={mergedArrow}>
+            <span className="block max-w-[120px] truncate">
+              {description || "..."}
+            </span>
           </Tooltip>
         );
       },
@@ -253,6 +251,36 @@ export default function EksponatTable() {
       ),
     },
     {
+      title: "Status",
+      dataIndex: "statusCategory",
+      key: "statusCategory",
+      width: 120,
+      render: (statusCategory: string) => (
+        <span
+          style={{
+            padding: "4px 8px",
+            borderRadius: "4px",
+            backgroundColor:
+              statusCategory === "Yangi"
+                ? "#70e00025"
+                : statusCategory === "Kuchirildi"
+                ? "#F3E8FF"
+                : "#f6f8fb",
+            color:
+              statusCategory === "Yangi"
+                ? "#38b000"
+                : statusCategory === "Kuchirildi"
+                ? "#6B21A8"
+                : "#8c8c8c",
+            fontSize: "12px",
+            fontWeight: 500,
+          }}
+        >
+          {statusCategory || "Noma'lum"}
+        </span>
+      ),
+    },
+    {
       title: "Amallar",
       key: "actions",
       width: 200,
@@ -262,7 +290,7 @@ export default function EksponatTable() {
             type="text"
             size="small"
             onClick={() => handleView(record)}
-            style={{ padding: 0, color: "#1890ff" }}
+            style={{ padding: 4, color: "#1890ff" }}
             title="Ko'rish"
           >
             <EyeIcon />
@@ -271,7 +299,7 @@ export default function EksponatTable() {
             type="text"
             size="small"
             onClick={() => handleEdit(record)}
-            style={{ padding: 0, color: "#52c41a" }}
+            style={{ padding: 4, color: "#52c41a" }}
             title="Tahrirlash"
           >
             <EditIcon />
@@ -280,7 +308,7 @@ export default function EksponatTable() {
             type="text"
             size="small"
             onClick={() => handleMove(record)}
-            style={{ padding: 0, color: "#9c27b0" }}
+            style={{ padding: 4, color: "#9c27b0" }}
             title="Ko'chirish"
           >
             <MoveIcon />
@@ -295,7 +323,7 @@ export default function EksponatTable() {
             <Button
               type="text"
               size="small"
-              style={{ padding: 0, color: "#ff4d4f" }}
+              style={{ padding: 4, color: "#ff4d4f" }}
               title="O'chirish"
             >
               <DeleteIcon />
@@ -313,7 +341,7 @@ export default function EksponatTable() {
           placeholder="Qidirish..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          className="h-[40px] w-full dark-input"
+          className="h-[40px] w-full ant-input dark-input"
           prefix={
             <svg
               width="16"
@@ -403,9 +431,7 @@ export default function EksponatTable() {
       <AddBuildingModal
         visible={modalState.addBuilding}
         onClose={() => setModalState({ ...modalState, addBuilding: false })}
-        onCreated={() => {
-          // Refresh buildings data if needed
-        }}
+        onCreated={() => {}}
       />
     </div>
   );
