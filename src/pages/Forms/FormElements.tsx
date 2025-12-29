@@ -23,7 +23,7 @@ export default function FormElements() {
 
   return (
     <div>
-      <PageMeta title="Muzey" description="Muzey" />
+      <PageMeta title="Muzey | Eksponatlar" description="Muzey | Eksponatla" />
       <PageBreadcrumb pageTitle="Eksponatlar" />
       <div className="my-6">
         <EksponatTable />

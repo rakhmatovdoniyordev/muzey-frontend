@@ -25,7 +25,6 @@ import type { ColumnsType } from "antd/es/table";
 export default function EksponatTable() {
   const { data: items = [], isLoading } = useItemObjects();
   const { data: categories = [] } = useCategoriesAsosiy();
-  console.log(items);
 
   const { mutate: deleteItem } = useDeleteItemObject();
 

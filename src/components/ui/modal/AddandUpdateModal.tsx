@@ -10,8 +10,6 @@ import {
   useCategoriesAsosiy,
   useCreateLocation,
   useBuildingId,
-  useLocations,
-  useUpdateCategory,
 } from "../../../hooks/useCategoryandBuildings";
 import type { ItemObject } from "../../../hooks/useCategoryandBuildings";
 import { FileOutlined } from "@ant-design/icons";
@@ -26,11 +24,11 @@ interface ItemFormValues {
   status: string;
   fondType: string;
   description?: string;
-  bino?: number;
-  qavat?: number;
-  xona?: number;
-  vitrina?: number;
-  polka?: number;
+  bino: number;
+  qavat: number;
+  xona: number;
+  vitrina: number;
+  polka: number;
 }
 
 interface Props {
@@ -58,8 +56,6 @@ export default function AddUpdateItemModal({
   const { mutate: createItem, isPending: isCreating } = useCreateItemObject();
   const { mutate: updateItem, isPending: isUpdating } = useUpdateItemObject();
   const { mutate: createLocation } = useCreateLocation();
-  const { mutate: updateCategory } = useUpdateCategory();
-  const { data: locations = [] } = useLocations();
 
   const { data: asosiyCategories = [], isLoading: isLoadingAsosiy } =
     useCategoriesAsosiy();
@@ -325,7 +321,33 @@ export default function AddUpdateItemModal({
                   rules={[{ required: true, message: "Kategoriyani tanlang" }]}
                 >
                   <Select
-                    placeholder="Tanlang"
+                    placeholder={
+                      <span
+                        style={{
+                          color: document.documentElement.classList.contains(
+                            "dark"
+                          )
+                            ? "#bcbcbc"
+                            : "#6b7280",
+                        }}
+                      >
+                        Tanlang
+                      </span>
+                    }
+                    style={{
+                      backgroundColor:
+                        document.documentElement.classList.contains("dark")
+                          ? "#101828"
+                          : "#ffffff",
+                      borderColor: document.documentElement.classList.contains(
+                        "dark"
+                      )
+                        ? "#344054"
+                        : "#d1d5db",
+                      color: document.documentElement.classList.contains("dark")
+                        ? "#ffffff"
+                        : "#1f2937",
+                    }}
                     options={categoryOptions}
                     onChange={handleCategoryChange}
                   />
@@ -335,7 +357,33 @@ export default function AddUpdateItemModal({
               <Col span={12}>
                 <Form.Item label="Qism kategoriya" name="subcategory_id">
                   <Select
-                    placeholder="Tanlang"
+                    placeholder={
+                      <span
+                        style={{
+                          color: document.documentElement.classList.contains(
+                            "dark"
+                          )
+                            ? "#bcbcbc"
+                            : "#6b7280",
+                        }}
+                      >
+                        Tanlang
+                      </span>
+                    }
+                    style={{
+                      backgroundColor:
+                        document.documentElement.classList.contains("dark")
+                          ? "#101828"
+                          : "#ffffff",
+                      borderColor: document.documentElement.classList.contains(
+                        "dark"
+                      )
+                        ? "#344054"
+                        : "#d1d5db",
+                      color: document.documentElement.classList.contains("dark")
+                        ? "#ffffff"
+                        : "#1f2937",
+                    }}
                     options={subcategoryOptions}
                     onChange={handleSubCategoryChange}
                   />
@@ -363,7 +411,36 @@ export default function AddUpdateItemModal({
                   name="status"
                   rules={[{ required: true, message: "Holatni tanlang" }]}
                 >
-                  <Select options={statusOptions} placeholder="Tanlang" />
+                  <Select
+                    options={statusOptions}
+                    placeholder={
+                      <span
+                        style={{
+                          color: document.documentElement.classList.contains(
+                            "dark"
+                          )
+                            ? "#bcbcbc"
+                            : "#6b7280",
+                        }}
+                      >
+                        Tanlang
+                      </span>
+                    }
+                    style={{
+                      backgroundColor:
+                        document.documentElement.classList.contains("dark")
+                          ? "#101828"
+                          : "#ffffff",
+                      borderColor: document.documentElement.classList.contains(
+                        "dark"
+                      )
+                        ? "#344054"
+                        : "#d1d5db",
+                      color: document.documentElement.classList.contains("dark")
+                        ? "#ffffff"
+                        : "#1f2937",
+                    }}
+                  />
                 </Form.Item>
               </Col>
             </Row>
@@ -385,14 +462,45 @@ export default function AddUpdateItemModal({
                   name="fondType"
                   rules={[{ required: true, message: "Fond turini tanlang" }]}
                 >
-                  <Select options={fondOptions} placeholder="Tanlang" />
+                  <Select
+                    options={fondOptions}
+                    placeholder={
+                      <span
+                        style={{
+                          color: document.documentElement.classList.contains(
+                            "dark"
+                          )
+                            ? "#bcbcbc"
+                            : "#6b7280",
+                        }}
+                      >
+                        Tanlang
+                      </span>
+                    }
+                    style={{
+                      backgroundColor:
+                        document.documentElement.classList.contains("dark")
+                          ? "#101828"
+                          : "#ffffff",
+                      borderColor: document.documentElement.classList.contains(
+                        "dark"
+                      )
+                        ? "#344054"
+                        : "#d1d5db",
+                      color: document.documentElement.classList.contains("dark")
+                        ? "#ffffff"
+                        : "#1f2937",
+                    }}
+                  />
                 </Form.Item>
               </Col>
             </Row>
 
             {!isEditing && (
               <div className="border-t pt-4 mt-4 mb-4">
-                <h4 className="font-bold mb-3">Joylashuv ma’lumotlari</h4>
+                <h4 className="font-bold mb-3 dark:text-white/80">
+                  Joylashuv ma’lumotlari
+                </h4>
 
                 <div className="grid grid-cols-5 gap-2">
                   <Form.Item
@@ -401,6 +509,34 @@ export default function AddUpdateItemModal({
                     rules={[{ required: true, message: "Binoni tanlang" }]}
                   >
                     <Select
+                      placeholder={
+                        <span
+                          style={{
+                            color: document.documentElement.classList.contains(
+                              "dark"
+                            )
+                              ? "#bcbcbc"
+                              : "#6b7280",
+                          }}
+                        >
+                          Tanlang
+                        </span>
+                      }
+                      style={{
+                        backgroundColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#101828"
+                            : "#ffffff",
+                        borderColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#344054"
+                            : "#d1d5db",
+                        color: document.documentElement.classList.contains(
+                          "dark"
+                        )
+                          ? "#ffffff"
+                          : "#1f2937",
+                      }}
                       options={buildingOptions}
                       onChange={handleBuildingChange}
                     />
@@ -411,7 +547,37 @@ export default function AddUpdateItemModal({
                     name="qavat"
                     rules={[{ required: true, message: "Qavatni tanlang" }]}
                   >
-                    <Select options={floorOptions} />
+                    <Select
+                      options={floorOptions}
+                      placeholder={
+                        <span
+                          style={{
+                            color: document.documentElement.classList.contains(
+                              "dark"
+                            )
+                              ? "#bcbcbc"
+                              : "#6b7280",
+                          }}
+                        >
+                          Tanlang
+                        </span>
+                      }
+                      style={{
+                        backgroundColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#101828"
+                            : "#ffffff",
+                        borderColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#344054"
+                            : "#d1d5db",
+                        color: document.documentElement.classList.contains(
+                          "dark"
+                        )
+                          ? "#ffffff"
+                          : "#1f2937",
+                      }}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -419,7 +585,37 @@ export default function AddUpdateItemModal({
                     name="xona"
                     rules={[{ required: true, message: "Xonani tanlang" }]}
                   >
-                    <Select options={roomOptions} />
+                    <Select
+                      options={roomOptions}
+                      placeholder={
+                        <span
+                          style={{
+                            color: document.documentElement.classList.contains(
+                              "dark"
+                            )
+                              ? "#bcbcbc"
+                              : "#6b7280",
+                          }}
+                        >
+                          Tanlang
+                        </span>
+                      }
+                      style={{
+                        backgroundColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#101828"
+                            : "#ffffff",
+                        borderColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#344054"
+                            : "#d1d5db",
+                        color: document.documentElement.classList.contains(
+                          "dark"
+                        )
+                          ? "#ffffff"
+                          : "#1f2937",
+                      }}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -427,7 +623,37 @@ export default function AddUpdateItemModal({
                     name="vitrina"
                     rules={[{ required: true, message: "Vitrinani tanlang" }]}
                   >
-                    <Select options={showcaseOptions} />
+                    <Select
+                      options={showcaseOptions}
+                      placeholder={
+                        <span
+                          style={{
+                            color: document.documentElement.classList.contains(
+                              "dark"
+                            )
+                              ? "#bcbcbc"
+                              : "#6b7280",
+                          }}
+                        >
+                          Tanlang
+                        </span>
+                      }
+                      style={{
+                        backgroundColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#101828"
+                            : "#ffffff",
+                        borderColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#344054"
+                            : "#d1d5db",
+                        color: document.documentElement.classList.contains(
+                          "dark"
+                        )
+                          ? "#ffffff"
+                          : "#1f2937",
+                      }}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -435,7 +661,37 @@ export default function AddUpdateItemModal({
                     name="polka"
                     rules={[{ required: true, message: "Polkani tanlang" }]}
                   >
-                    <Select options={polkaOptions} />
+                    <Select
+                      options={polkaOptions}
+                      placeholder={
+                        <span
+                          style={{
+                            color: document.documentElement.classList.contains(
+                              "dark"
+                            )
+                              ? "#bcbcbc"
+                              : "#6b7280",
+                          }}
+                        >
+                          Tanlang
+                        </span>
+                      }
+                      style={{
+                        backgroundColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#101828"
+                            : "#ffffff",
+                        borderColor:
+                          document.documentElement.classList.contains("dark")
+                            ? "#344054"
+                            : "#d1d5db",
+                        color: document.documentElement.classList.contains(
+                          "dark"
+                        )
+                          ? "#ffffff"
+                          : "#1f2937",
+                      }}
+                    />
                   </Form.Item>
                 </div>
               </div>

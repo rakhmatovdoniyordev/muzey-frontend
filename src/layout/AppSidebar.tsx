@@ -80,7 +80,6 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
 
   const authState = useSelector((state: any) => state.auth);
-  console.log(authState);
 
   const currentUser = authState.user;
 
@@ -122,7 +121,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location.pathname, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {

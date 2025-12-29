@@ -1,11 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Table,
-  Input,
-  Tag,
-  DatePicker,
-  Tooltip,
-} from "antd";
+import { Table, Input, Tag, DatePicker, Tooltip } from "antd";
 import {
   useHistory,
   useItemObjects,
@@ -17,6 +11,7 @@ import PageMeta from "../../components/common/PageMeta";
 import { SearchOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { History } from "../../hooks/useCategoryandBuildings";
+import { useSelector } from "react-redux";
 
 const { RangePicker } = DatePicker;
 
@@ -25,7 +20,10 @@ export default function HistoryPage() {
   const { data: items = [] } = useItemObjects();
   const { data: categories = [] } = useCategoriesAsosiy();
   const { data: buildings = [] } = useAllBuildings();
-  console.log("Histories:", histories);
+
+  const authState = useSelector((state: any) => state.auth);
+  const currentUser = authState.user;
+  const isSuperAdmin = currentUser?.role?.toLowerCase() === "superadmin";
 
   const [searchText, setSearchText] = useState("");
   const [dateRange, setDateRange] = useState<[any, any] | null>(null);
@@ -56,6 +54,12 @@ export default function HistoryPage() {
 
   const filteredHistories = useMemo(() => {
     return histories.filter((history) => {
+      const isVisibleToUser =
+        isSuperAdmin ||
+        (!isSuperAdmin &&
+          history.data.info?.responsiblePerson?.toLowerCase() ===
+            currentUser?.name?.toLowerCase());
+
       const matchesSearch =
         !searchText ||
         history.data.itemName
@@ -87,9 +91,9 @@ export default function HistoryPage() {
           new Date(history.data.info?.date) >= dateRange[0] &&
           new Date(history.data.info?.date) <= dateRange[1]);
 
-      return matchesSearch && matchesDateRange;
+      return isVisibleToUser && matchesSearch && matchesDateRange;
     });
-  }, [histories, itemsMap, searchText, dateRange]);
+  }, [histories, itemsMap, searchText, dateRange, isSuperAdmin, currentUser]);
 
   const columns: ColumnsType<History> = [
     {

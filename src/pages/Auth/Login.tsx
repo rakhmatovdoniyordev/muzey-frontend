@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { login } from "../../contex/authSlice";
 import { useNavigate } from "react-router";
 import { useLogin } from "../../hooks/useCategoryandBuildings";
+import PageMeta from "../../components/common/PageMeta";
 
 interface LoginValues {
   email: string;
@@ -23,7 +24,7 @@ const LoginPage = () => {
         dispatch(login(data));
 
         message.success("Muvaffaqiyatli kirish!");
-        navigate("/"); // Redirect to dashboard
+        navigate("/");
       },
       onError: (error: any) => {
         if (error.response?.status === 401) {
@@ -44,6 +45,7 @@ const LoginPage = () => {
         fontFamily: "sans-serif",
       }}
     >
+      <PageMeta title="Tizimga kirish" description="Tizimga kirish sahifi" />
       <div
         style={{
           width: 400,

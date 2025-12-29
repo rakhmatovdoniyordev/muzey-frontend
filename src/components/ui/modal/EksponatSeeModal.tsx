@@ -109,7 +109,9 @@ export default function ViewItemModal({
               INV Raqam
             </div>
             <div className="text-sm font-semibold text-[#7c3aed]">
-              INV-VI/01-001
+              {data.category?.categoryNumber
+                ? `INV-${data.category.categoryNumber}/01-00${data.id}`
+                : `INV-XX/01-${data.id}`}
             </div>
           </div>
 

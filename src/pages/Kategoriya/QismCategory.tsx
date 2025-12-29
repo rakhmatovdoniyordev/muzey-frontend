@@ -8,6 +8,7 @@ import {
   useCategoriesAsosiy,
 } from "../../hooks/useCategoryandBuildings";
 import { useEffect, useState } from "react";
+import PageMeta from "../../components/common/PageMeta";
 
 const QismCategory = () => {
   const [isDark, setIsDark] = useState(false);
@@ -52,6 +53,7 @@ const QismCategory = () => {
 
   return (
     <section>
+      <PageMeta title="Muzey | Qism Kategoriya" description="Qism Kategoriya sahifi" />
       <div className="w-full border rounded-xl bg-white dark:bg-gray-dark dark:border-gray-700 shadow-sm">
         <div className="w-full p-4">
           <Form
@@ -112,7 +114,7 @@ const QismCategory = () => {
                     backgroundColor:
                       document.documentElement.classList.contains("dark")
                         ? "#1a2231"
-                        : "#ffffff", 
+                        : "#ffffff",
                     color: document.documentElement.classList.contains("dark")
                       ? "#ffffff"
                       : "#1f2937",

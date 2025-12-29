@@ -6,7 +6,6 @@ import {
   message,
   Input,
   Tag,
-  Modal,
   Form,
   Input as AntdInput,
   Select,
@@ -29,6 +28,7 @@ import {
   useUpdateAdminPassword,
   useDeleteAdmin,
 } from "../../hooks/useCategoryandBuildings";
+import { Modal } from "../../components/ui/modal";
 
 interface AdminUser {
   id: number;
@@ -346,11 +346,9 @@ export default function AdminManagement() {
 
       <Modal
         title={editingAdmin ? "Adminni tahrirlash" : "Yangi admin qo'shish"}
-        open={isModalVisible}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
-        okText={editingAdmin ? "Yangilash" : "Qo'shish"}
-        cancelText="Bekor qilish"
+        isOpen={isModalVisible}
+        onClose={handleModalCancel}
+        className="max-w-md p-6"
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -358,7 +356,7 @@ export default function AdminManagement() {
             label="Ism"
             rules={[{ required: true, message: "Ismni kiriting!" }]}
           >
-            <AntdInput />
+            <AntdInput className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           </Form.Item>
 
           <Form.Item
@@ -369,7 +367,7 @@ export default function AdminManagement() {
               { type: "email", message: "To'g'ri email kiriting!" },
             ]}
           >
-            <AntdInput />
+            <AntdInput className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           </Form.Item>
 
           {!editingAdmin && (
@@ -378,7 +376,7 @@ export default function AdminManagement() {
               label="Parol"
               rules={[{ required: true, message: "Parolni kiriting!" }]}
             >
-              <AntdInput.Password />
+              <AntdInput.Password className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
             </Form.Item>
           )}
 
@@ -387,18 +385,35 @@ export default function AdminManagement() {
             label="Rol"
             rules={[{ required: true, message: "Rolni tanlang!" }]}
           >
-            <Select options={roleOptions} />
+            <Select
+              options={roleOptions}
+              className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            />
           </Form.Item>
         </Form>
+        <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={handleModalCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:outline-none focus:ring-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+          >
+            Bekor qilish
+          </button>
+          <button
+            type="button"
+            onClick={handleModalOk}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:outline-none focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700"
+          >
+            {editingAdmin ? "Yangilash" : "Qo'shish"}
+          </button>
+        </div>
       </Modal>
 
       <Modal
         title="Admin parolini o'zgartirish"
-        open={isPasswordModalVisible}
-        onOk={handlePasswordModalOk}
-        onCancel={handlePasswordModalCancel}
-        okText="Yangilash"
-        cancelText="Bekor qilish"
+        isOpen={isPasswordModalVisible}
+        onClose={handlePasswordModalCancel}
+        className="max-w-md p-6"
       >
         <Form form={passwordForm} layout="vertical">
           <Form.Item
@@ -406,7 +421,7 @@ export default function AdminManagement() {
             label="Yangi parol"
             rules={[{ required: true, message: "Parolni kiriting!" }]}
           >
-            <AntdInput.Password />
+            <AntdInput.Password className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           </Form.Item>
 
           <Form.Item
@@ -424,9 +439,25 @@ export default function AdminManagement() {
               }),
             ]}
           >
-            <AntdInput.Password />
+            <AntdInput.Password className="dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
           </Form.Item>
         </Form>
+        <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={handlePasswordModalCancel}
+            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:outline-none focus:ring-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600"
+          >
+            Bekor qilish
+          </button>
+          <button
+            type="button"
+            onClick={handlePasswordModalOk}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:outline-none focus:ring-blue-500 dark:bg-blue-600 dark:hover:bg-blue-700"
+          >
+            Yangilash
+          </button>
+        </div>
       </Modal>
     </>
   );

@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useRef, useEffect } from "react"
+import { useRef, useEffect } from "react";
 
 interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  className?: string
-  children: React.ReactNode
-  showCloseButton?: boolean
-  isFullscreen?: boolean
-  title?: string
+  isOpen: boolean;
+  onClose: () => void;
+  className?: string;
+  children: React.ReactNode;
+  showCloseButton?: boolean;
+  isFullscreen?: boolean;
+  title?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -19,56 +19,71 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   children,
   className,
-  showCloseButton = true, 
+  showCloseButton = true,
   isFullscreen = false,
   title = "Nomi",
 }) => {
-  const modalRef = useRef<HTMLDivElement>(null)
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onClose()
+        onClose();
       }
-    }
+    };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleEscape)
+      document.addEventListener("keydown", handleEscape);
     }
 
     return () => {
-      document.removeEventListener("keydown", handleEscape)
-    }
-  }, [isOpen, onClose])
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = "hidden"
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = "unset"
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = "unset"
-    }
-  }, [isOpen])
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
-  const contentClasses = isFullscreen ? "w-full h-full" : "relative w-full rounded-3xl bg-white  dark:bg-gray-900"
+  const contentClasses = isFullscreen
+    ? "w-full h-full"
+    : "relative w-full rounded-3xl bg-white  dark:bg-gray-900";
 
   return (
     <div className="fixed inset-0 flex items-center justify-center overflow-y-auto modal z-999">
       {!isFullscreen && (
-        <div className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]" onClick={onClose}></div>
+        <div
+          className="fixed inset-0 h-full w-full bg-gray-400/50 backdrop-blur-[32px]"
+          onClick={onClose}
+        ></div>
       )}
-      <div ref={modalRef} className={`${contentClasses}  ${className}`} onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={modalRef}
+        className={`${contentClasses}  ${className}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {showCloseButton && (
           <button
             onClick={onClose}
             className="absolute right-3 top-3 z-999 flex h-9.5 w-9.5 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition-colors hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white sm:right-6 sm:top-6 sm:h-11 sm:w-11"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
@@ -79,10 +94,12 @@ export const Modal: React.FC<ModalProps> = ({
           </button>
         )}
         <div>
-          <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 mt-4">{title}</h4>
+          <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 mt-4">
+            {title}
+          </h4>
         </div>
         <div>{children}</div>
       </div>
     </div>
-  )
-}
+  );
+};

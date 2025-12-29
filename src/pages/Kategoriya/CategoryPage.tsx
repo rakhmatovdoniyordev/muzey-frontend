@@ -1,10 +1,10 @@
-// DOCUMENT filename="CategoryPage.tsx"
 import { Form, message } from "antd";
 import Input from "../../components/form/input/InputField";
 import Button from "../../components/ui/button/Button";
 import { PlusIcon } from "../../icons";
 import CategoryTable from "../../components/tables/CategoryTable/CategoryTable";
 import { useCreateCategory } from "../../hooks/useCategoryandBuildings";
+import PageMeta from "../../components/common/PageMeta";
 
 const CategoryPage = () => {
   const [form] = Form.useForm();
@@ -20,8 +20,8 @@ const CategoryPage = () => {
         infoName: "",
         authorName: "",
         moved: 0,
-        status: "Yangi", // Set initial status to "Yangi"
-        category_id: 0, // Add the missing required field, will be set by backend
+        status: "Yangi",
+        category_id: 0,
       },
       {
         onSuccess: () => {
@@ -37,6 +37,7 @@ const CategoryPage = () => {
 
   return (
     <section>
+      <PageMeta title="Muzey | Kategoriya" description="Kategoriya sahifi" />
       <div className="w-full border rounded-xl bg-white dark:bg-gray-dark dark:border-gray-700 shadow-sm">
         <div className="w-full p-4">
           <Form

@@ -5,8 +5,6 @@ import { Table, Button, Space, message, Input, Popconfirm } from "antd";
 import {
   useItemObjects,
   useDeleteItemObject,
-  useLocations,
-  useAllBuildings,
   useCategoriesAsosiy,
   useHistory,
 } from "../../hooks/useCategoryandBuildings";
@@ -32,8 +30,6 @@ import { saveAs } from "file-saver";
 export default function Kuchirishlar() {
   const { data: items = [], isLoading } = useItemObjects();
   const { data: categories = [] } = useCategoriesAsosiy();
-  const { data: locations = [] } = useLocations();
-  const { data: buildings = [] } = useAllBuildings();
   const { data: histories = [], isLoading: historiesLoading } = useHistory();
   const { mutate: deleteItem } = useDeleteItemObject();
 
@@ -302,7 +298,7 @@ export default function Kuchirishlar() {
               ],
               spacing: { after: 120 },
             }),
-            ...filteredAndSearchedItems.map((item, index) => {
+            ...filteredAndSearchedItems.map((item) => {
               const history = historiesMap[item.id];
               if (!history || !history.data.info) return new Paragraph({});
 
@@ -348,10 +344,6 @@ export default function Kuchirishlar() {
                 right: { style: BorderStyle.SINGLE, size: 1 },
                 insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
                 insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-              },
-              style: {
-                textAlign: "center",
-                fontSize: 24,
               },
               rows: [
                 new TableRow({
@@ -436,8 +428,6 @@ export default function Kuchirishlar() {
                 }),
                 // Ma'lumot qatorlari
                 ...filteredAndSearchedItems.map((item, index) => {
-                  const category = categoriesMap[item.category_id];
-                  const history = historiesMap[item.id];
                   return new TableRow({
                     children: [
                       new TableCell({
